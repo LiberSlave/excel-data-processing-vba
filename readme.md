@@ -37,7 +37,7 @@
 ![Pasted image 20251127002026.png](./images/Pasted-image-20251127002026.png)
 (캡션: 음극(anode)버전과 양극(cathode)버전을 만들어 연구생 모두가 사용가능하게 범용성 확보)
 
-> **[Reference]** 각 모듈별 상세 코드 로직 및 알고리즘 설명 영상 
+> **[Reference]** 각 모듈별 상세 코드 로직 및 알고리즘 설명 영상 (아래사진 클릭!)
 [![각 모듈별 상세 코드 로직 및 알고리즘 설명 영상](https://img.youtube.com/vi/pBTxCt7FUQk/0.jpg)](https://www.youtube.com/watch?v=pBTxCt7FUQk)
 
 ###  2-2. 사용자 접근성(Accessibility) 및 표준화
@@ -53,7 +53,7 @@
 실행 버튼을 클릭하면 프로그램이 수만 행의 데이터를 실시간으로 스캔하며 재정렬을 수행합니다. 아래 사진들은 실제 프로그램 구동 시 데이터가 분류되는 과정입니다.
 ![Pasted image 20251127002525.png](./images/Pasted-image-20251127002525.png) ![Pasted image 20251127002545.png](./images/Pasted-image-20251127002545.png) ![Pasted image 20251127002558.png](./images/Pasted-image-20251127002558.png) *(캡션: 알고리즘에 의해 불필요한 행이 삭제되고, Scan Rate 별로 데이터가 자동 정렬되는 실시간 처리 모습)* 
 
-**[Demo]** 프로그램 실제 구동 및 결과 확인 영상(간략한 설명포함) 
+**[Demo]** 프로그램 실제 구동 및 결과 확인 영상(간략한 설명포함) (아래사진 클릭!)
 [![vba프로그램 구동영상](https://img.youtube.com/vi/nqmYlnn32i0/0.jpg)](https://www.youtube.com/watch?v=nqmYlnn32i0)
 
 
