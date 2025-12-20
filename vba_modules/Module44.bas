@@ -1,13 +1,14 @@
 ' Code to convert 2 cycles into 1 cycle.
-' The voltage profile is measured as increase → decrease → increase → decrease (2 cycles),
-' and this code removes the first cycle (increase → decrease).
+' For cathode materials, the voltage profile is measured as
+' decrease → increase → decrease → increase (2 cycles),
+' and this code removes the first cycle (decrease → increase).
 ' The reason is that when 2-cycle raw data is used in kinetics analytics,
 ' a bug seems to occur where the plot is rendered as scattered points instead of a proper curve.
 ' Therefore, only 1 cycle is kept.
 ' Running this code is optional. You can skip it and move on to Module 5.
 ' (This code may cause lag.)
 
-Sub d()
+Sub dd()
     Dim ws As Worksheet
     Dim lastRow As Long
     Dim i As Long, col As Long
@@ -34,23 +35,23 @@ Sub d()
         
         ' Iterate through data
         For i = 2 To lastRow
-            ' Find the start of voltage increase
-            If Not foundStart And ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value Then
+            ' Find the start of voltage decrease
+            If Not foundStart And ws.Cells(i, currentColumn).Value < ws.Cells(i - 1, currentColumn).Value Then
                 startOfCycle = i - 1
                 foundStart = True
             End If
             
-            ' Find the point where voltage decreases and then increases again
+            ' Find the point where voltage increases and then decreases again
             If foundStart And Not foundEnd Then
-                If ws.Cells(i, currentColumn).Value < ws.Cells(i - 1, currentColumn).Value Then
-                    ' During voltage decrease
-                    Do While ws.Cells(i, currentColumn).Value < ws.Cells(i - 1, currentColumn).Value And i < lastRow
+                If ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value Then
+                    ' During voltage increase
+                    Do While ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value And i < lastRow
                         i = i + 1
                     Loop
                     
-                    ' Moment when voltage starts increasing again
-                    If ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value Then
-                        endOfCycle = i ' Store the row index where increase resumes
+                    ' Moment when voltage starts decreasing again
+                    If ws.Cells(i, currentColumn).Value < ws.Cells(i - 1, currentColumn).Value Then
+                        endOfCycle = i ' Store the row index where decrease resumes
                         foundEnd = True
                         Exit For
                     End If

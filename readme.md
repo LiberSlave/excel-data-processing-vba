@@ -17,6 +17,7 @@
 *   **높은 시간 비용과 오류 위험:** 셀 1개당 전처리에 약 **20분**이 소요되었으며, 수작업 특성상 유효 데이터를 실수로 삭제하는 등의 **휴먼 에러(Human Error)**가 빈번히 발생하여 실험 결과의 신뢰도를 저해했습니다.
 
 ![Pasted image 20251127000844.png](./images/Pasted-image-20251127000844.png)
+
 *(캡션: 자동화 전, 수십만 행에 달하는 Raw Data 모습. 육안으로 식별 및 분류가 필요했음)*
 
 ---
@@ -32,9 +33,11 @@
 *   **Dual Mode 지원:** Anode(음극)와 Cathode(양극)의 전기화학적 측정 메커니즘 차이를 반영하여, 각각에 최적화된 처리 모듈(Module 1~5)을 분리 설계하여 정확도를 높였습니다.
 
 ![Pasted image 20251127010107.png](./images/Pasted-image-20251127010107.png)
+
 *(캡션: 모듈 단위로 구조화하여 유지보수 용이성을 높인 VBA 코드 일부)*
 
 ![Pasted image 20251127002026.png](./images/Pasted-image-20251127002026.png)
+
 (캡션: 음극(anode)버전과 양극(cathode)버전을 만들어 연구생 모두가 사용가능하게 범용성 확보)
 
 > **[Reference]** 각 모듈별 상세 코드 로직 및 알고리즘 설명 영상 (아래사진 클릭!)
@@ -51,10 +54,106 @@
 ### 2-3. 데이터 처리 및 정렬 실행 과정 (Processing Visualization)
 
 실행 버튼을 클릭하면 프로그램이 수만 행의 데이터를 실시간으로 스캔하며 재정렬을 수행합니다. 아래 사진들은 실제 프로그램 구동 시 데이터가 분류되는 과정입니다.
-![Pasted image 20251127002525.png](./images/Pasted-image-20251127002525.png) ![Pasted image 20251127002545.png](./images/Pasted-image-20251127002545.png) ![Pasted image 20251127002558.png](./images/Pasted-image-20251127002558.png) *(캡션: 알고리즘에 의해 불필요한 행이 삭제되고, Scan Rate 별로 데이터가 자동 정렬되는 실시간 처리 모습)* 
+![Pasted image 20251127002525.png](./images/Pasted-image-20251127002525.png) ![Pasted image 20251127002545.png](./images/Pasted-image-20251127002545.png) ![Pasted image 20251127002558.png](./images/Pasted-image-20251127002558.png) 
+*(캡션: 알고리즘에 의해 불필요한 행이 삭제되고, Scan Rate 별로 데이터가 자동 정렬되는 실시간 처리 모습)* 
 
 **[Demo]** 프로그램 실제 구동 및 결과 확인 영상(간략한 설명포함) (아래사진 클릭!)
 [![vba프로그램 구동영상](https://img.youtube.com/vi/nqmYlnn32i0/0.jpg)](https://www.youtube.com/watch?v=nqmYlnn32i0)
+
+### 2-4. 핵심 모듈별 알고리즘 상세 (Key Algorithm Logic)
+
+본 프로그램은 배터리 데이터 특성에 맞춰 단계별로 정밀한 전처리를 수행합니다. 각 모듈은 독립적으로 기능하며, 소재(음극/양극)에 따라 유연하게 적용됩니다.
+
+
+#### **① Module 2: 노이즈 제거 및 Scan Rate 자동 분류**
+
+-   **기능:** 장비 대기 상태(Idle)에서 발생하는 `Current = 0`인 무의미한 데이터를 제거하고, 연속된 실험 데이터를 5가지 Scan Rate(0.1 ~ 1.0 mV/s)별로 인식하여 별도의 열(Column)로 분리합니다.
+-   **로직:** 전류값(Current)을 스캔하여 **0이 아닌 유효 데이터**의 시작점을 찾아 그 이전 행을 삭제하고, 다시 **0이 나오는 지점(다음 실험 대기 구간)**을 찾아 데이터를 잘라내어(Cut) 옆 열로 이동시킵니다.
+
+```vb
+' [Module2.bas]
+' 1. Remove rows where current equals zero (Noise Removal)
+If dValue <> 0 Then
+    firstNonZeroRow = currentRow
+    Exit For ' Exit loop after finding the first non-zero value
+End If
+ws.Rows("2:" & lastZeroRow).Delete
+
+' 2. Cut data for next scan rate (Classification)
+If dValue = 0 Then
+    zeroRow = currentRow ' Store the row number of the first zero value
+    Exit For
+End If
+Set rangeToCut = ws.Range("C" & zeroRow & ":E" & lastRow)
+rangeToCut.Copy
+ws.Range("G" & 2).PasteSpecial Paste:=xlPasteValues ' Move to next column
+```
+
+#### ② Module 3 & 33: 초기 전압 구간 트리밍 (Start Point Alignment)
+
+- **기능:** 실험 시작 시점(OCV)에서 실제 반응 시작 전압까지 이동하는 불필요한 초기 경로(Tail)를 제거하여, 모든 데이터의 시작점을 0V(또는 Peak)로 통일합니다.
+Dual Mode 로직:
+- Module 3 (Anode): 전압이 하강하다가 상승하기 시작하는 변곡점을 찾아 그 이전 데이터를 삭제합니다.
+- Module 33 (Cathode): 전압이 상승하다가 하강하기 시작하는 변곡점을 찾아 그 이전 데이터를 삭제합니다.
+
+```vb
+' [Module3.bas] - Anode Example
+' Traverse column data to find the turning point
+For currentRow = 3 To lastRow
+    currentValue = ws.Cells(currentRow, "C").Value
+    
+    ' If the value starts increasing (Turning Point), store the row number
+    If currentValue > previousValue Then
+        increasingRow = currentRow
+        minRow = increasingRow - 1
+        Exit For
+    End If
+    previousValue = currentValue
+Next currentRow
+
+' Delete the initial decreasing region
+For i = minRow To 2 Step -1
+    ws.Cells(i, 3).Delete Shift:=xlUp
+Next i
+```
+
+#### ③ Module 4 & 44: Cycle 최적화 및 오류 방지
+
+- **기능:**: 2 Cycle로 측정된 데이터에서 불안정한 1st Cycle을 제거하고, 안정화된 2nd Cycle만 추출합니다.
+- **목적:** 다중 Cycle 데이터를 Kinetics 분석 소프트웨어에 입력할 때 발생하는 그래프 깨짐 현상(Scattered Plot Bug)을 방지하고 데이터 신뢰성을 확보합니다.
+- **로직:** 전압의 증감 패턴(Increase ↔ Decrease)을 추적하여 **두 번째 주기가 시작되는 정확한 행(Row)**을 감지하고, 그 이전의 모든 데이터를 제거합니다.
+
+```vb
+' [Module4.bas]
+' Find the point where voltage decreases and then increases again (2nd Cycle Start)
+If foundStart And Not foundEnd Then
+    ' ... (Skip decreasing part) ...
+    
+    ' Moment when voltage starts increasing again
+    If ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value Then
+        endOfCycle = i ' Store the row index where 2nd cycle resumes
+        foundEnd = True
+        Exit For
+    End If
+End If
+
+' Delete the first cycle data
+If foundStart' [Module4.bas]
+' Find the point where voltage decreases and then increases again (2nd Cycle Start)
+If foundStart And Not foundEnd Then
+    ' ... (Skip decreasing part) ...
+    
+    ' Moment when voltage starts increasing again
+    If ws.Cells(i, currentColumn).Value > ws.Cells(i - 1, currentColumn).Value Then
+        endOfCycle = i ' Store the row index where 2nd cycle resumes
+        foundEnd = True
+        Exit For
+    End If
+End If
+
+' Delete the first cycle data
+If foundStart
+```
 
 
 ---

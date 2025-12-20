@@ -1,7 +1,7 @@
-' Code to delete the voltage-decreasing region from OCV to 0 V
-' That is, delete data up to just before the voltage starts increasing again
+' Code to delete the voltage-increasing region starting from OCV
+' That is, delete data up to just before the voltage starts decreasing again
 
-Sub c()
+Sub cc()
     Dim ws As Worksheet
     Dim lastRow As Long
     Dim currentRow As Long
@@ -24,8 +24,8 @@ Sub c()
     For currentRow = 3 To lastRow
         currentValue = ws.Cells(currentRow, "C").Value
         
-        ' If the value starts increasing, store the row number and exit the loop
-        If currentValue > previousValue Then
+        ' If the value starts decreasing, store the row number and exit the loop
+        If currentValue < previousValue Then
             increasingRow = currentRow
             minRow = increasingRow - 1
             Exit For
@@ -42,9 +42,9 @@ Sub c()
     
     ' Result message (optional)
 '    If increasingRow > 0 Then
-'        MsgBox "The first increasing value in column C is at row: " & increasingRow, vbInformation
+'        MsgBox "The first decreasing value in column C is at row: " & increasingRow, vbInformation
 '    Else
-'        MsgBox "No increasing value found in column C.", vbExclamation
+'        MsgBox "No decreasing value found in column C.", vbExclamation
 '    End If
 
     ' Find the last row with data in column G
@@ -58,8 +58,8 @@ Sub c()
     For currentRow = 3 To lastRow
         currentValue = ws.Cells(currentRow, "G").Value
         
-        ' If the value starts increasing, store the row number and exit the loop
-        If currentValue > previousValue Then
+        ' If the value starts decreasing, store the row number and exit the loop
+        If currentValue < previousValue Then
             increasingRow = currentRow
             minRow = increasingRow - 1
             Exit For
@@ -85,8 +85,8 @@ Sub c()
     For currentRow = 3 To lastRow
         currentValue = ws.Cells(currentRow, "K").Value
         
-        ' If the value starts increasing, store the row number and exit the loop
-        If currentValue > previousValue Then
+        ' If the value starts decreasing, store the row number and exit the loop
+        If currentValue < previousValue Then
             increasingRow = currentRow
             minRow = increasingRow - 1
             Exit For
@@ -112,8 +112,8 @@ Sub c()
     For currentRow = 3 To lastRow
         currentValue = ws.Cells(currentRow, "O").Value
         
-        ' If the value starts increasing, store the row number and exit the loop
-        If currentValue > previousValue Then
+        ' If the value starts decreasing, store the row number and exit the loop
+        If currentValue < previousValue Then
             increasingRow = currentRow
             minRow = increasingRow - 1
             Exit For
@@ -139,8 +139,8 @@ Sub c()
     For currentRow = 3 To lastRow
         currentValue = ws.Cells(currentRow, "S").Value
         
-        ' If the value starts increasing, store the row number and exit the loop
-        If currentValue > previousValue Then
+        ' If the value starts decreasing, store the row number and exit the loop
+        If currentValue < previousValue Then
             increasingRow = currentRow
             minRow = increasingRow - 1
             Exit For
@@ -154,5 +154,5 @@ Sub c()
         ws.Cells(i, 19).Delete Shift:=xlUp ' Column S
         ws.Cells(i, 20).Delete Shift:=xlUp ' Column T
     Next i
-    
+
 End Sub
